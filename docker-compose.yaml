@@ -1,0 +1,67 @@
+# Define global settings
+x-global-settings: &default-extra-configs
+  extra_hosts:
+    - "es-master-01:192.168.10.1"
+    - "es-master-02:192.168.10.2"
+    - "es-master-03:192.168.10.3"
+  logging:
+    driver: loki
+    options:
+      loki-url: "http://192.168.20.1:3100/loki/api/v1/push"
+      loki-retries: 3
+      max-size: 1g
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.23
+    container_name: es-master-01
+    ports:
+      - 9300:9300
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    environment:
+      - node.name=node1
+      - cluster.name=my-cluster
+      - discovery.seed_hosts=elasticsearch-node2,elasticsearch-node3
+      - cluster.initial_master_nodes=elasticsearch-node1,elasticsearch-node2,elasticsearch-node3
+      - network.host=0.0.0.0
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/node1.key
+      - xpack.security.http.ssl.certificate=certs/node1.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.security.transport.ssl.key=certs/node1.key
+      - xpack.security.transport.ssl.certificate=certs/node1.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca.crt
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    restart: always
+    healthcheck:
+      test: curl -sS -o /dev/null http://localhost:9200/_cluster/health?pretty
+      interval: 60s
+      timeout: 5s
+      retries: 3
+    <<: &default-extra-configs
+
+  socat:
+    image: yadd/socat-server
+    container_name: socat
+    ports:
+      - 9200:9200
+    environment:
+      - VERIFY=1
+      - PORT=9200
+      - DST=elasticsearch:9200
+      - CAFILE=/cacert.pem
+    volumes:
+      - ./socat/es-elasticsearch-01_sn.crt:/cert.pem
+      - ./socat/es-elasticsearch-01.key:/key.pem
+      - ./socat/govmu-local-ca.crt:/cacert.pem
+    <<: &default-extra-configs
+
+volumes:
+  es_data:

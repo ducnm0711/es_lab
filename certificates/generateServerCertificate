@@ -1,0 +1,36 @@
+#!/bin/sh
+
+NAME=$1
+
+if test "$NAME" = ""; then
+	echo "Missing name(s).
+
+Usage: $0 main-name.example.com altName1.example.com altName2.example.com ...
+" >&2
+	exit 1
+fi
+shift
+
+SAN=''
+
+for i in $@; do
+	SAN="$SAN --san=DNS:$i"
+done
+
+./easyrsa $SAN gen-req "$NAME" nopass | tee .logs
+
+REQ=$(grep -E '\.req$' .logs|sed -e 's/.* //')
+KEY=$(grep -E '\.key$' .logs|sed -e 's/.* //')
+
+echo $REQ
+
+./easyrsa import-req "$REQ" "${NAME}_sn"
+./easyrsa $SAN sign-req server "${NAME}_sn" | tee .logs
+
+CRT=$(grep -E '\.crt' .logs|sed -e 's/.* //')
+
+echo
+echo "KEY  is $KEY"
+echo "CERT is $CRT"
+
+echo "Please commit your changes"
