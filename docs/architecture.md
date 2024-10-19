@@ -17,13 +17,12 @@ graph TD
     LB --> M1
     LB --> M2
     LB --> M3
-
 ```
 
-Provider node: `ges-ldap-01` (read & write)
+The solution is hosted on Google Cloud Platform (GCP), utilizes Cloud Load Balancer to distribute traffic, ensures seamless request routing to active nodes.
 
-Consumer nodes: `ges-ldap-02`, `ges-ldap-03` (read-only)
-
-Replication is asynchronous, for every 100 operations or 10 minutes, which ever is sooner.
-
+Elasticsearch Cluster: 
+- Comprises three master nodes for high availability, tolerates node failures without downtime.
+- Each master node has a dedicated SSD for efficient storage.
+- Performance: SSDs provide high I/O performance and low latency.
 
