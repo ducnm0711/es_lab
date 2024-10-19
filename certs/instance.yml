@@ -1,0 +1,16 @@
+instances:
+  - name: "es-master-01" 
+    ip: 
+      - "192.168.10.1"
+    dns: 
+      - "es-master-01.mydomain.com"
+  - name: "es-master-02" 
+    ip: 
+      - "192.168.10.2"
+    dns: 
+      - "es-master-02.mydomain.com"
+  - name: "es-master-03" 
+    ip: 
+      - "192.168.10.3"
+    dns: 
+      - "es-master-03.mydomain.com"
